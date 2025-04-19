@@ -1,0 +1,20 @@
+{
+  "name": "inventario_sebas",
+  "version": "1.0.0",
+  "description": "projecto express",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "author": "sebastian aristizabal",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}
