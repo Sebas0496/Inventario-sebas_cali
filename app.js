@@ -2,22 +2,28 @@ import dotenv from 'dotenv';//nos permite conectar con nuestro archivo .env dond
 // las variables de entorno
 dotenv.config();
 import express from 'express';//Importamos express 
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 import fs from 'fs'; // Importamos el módulo fs para trabajar con el sistema de archivos  
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {UserValidationRules, UserValidationEditRules} from './validators.js';
 import { validationResult } from 'express-validator';
 
+import {LoggerMiddleware} from './middlewares/logger.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const usersFilePath = path.join(__dirname, 'users.json');
-const usersFilePath2 = path.join(__dirname, 'users2.json')
 
 
 const app = express();
 app.use(express.json());//Recibe datos json
 app.use(express.urlencoded({ extended: true }))//Recibe datos dese formularios html
+app.use(LoggerMiddleware);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3005;
 
@@ -127,6 +133,21 @@ app.delete('/users/delete/:id', (req,res) => {
 
   });
 });
+
+
+app.get('/error', (req,res, next) => {
+  next(new Error('Error intencional'));
+});
+
+app.get('/db-users', async(req,res) => {
+  try{
+    const users = await prisma.user.findMany();
+    res.json(users);
+  }catch(error){
+    res.status(500).json({error:'error al comunicarse a la base de datos'});
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`Corriendo por el puerto  http://localhost:${PORT}`);
