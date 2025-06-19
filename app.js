@@ -1,3 +1,53 @@
+/**
+ * @file app.js
+ * @description
+ * API RESTful para la gestión de usuarios utilizando Express.js, Prisma y almacenamiento en archivos JSON.
+ * Permite operaciones CRUD sobre usuarios, tanto en archivo local como en base de datos.
+ * Incluye validaciones, middlewares personalizados y manejo de errores.  
+ * 
+ * @module app
+ * 
+ * @requires dotenv Configuración de variables de entorno.
+ * @requires express Framework web para Node.js.
+ * @requires @prisma/client ORM para interacción con bases de datos.
+ * @requires fs Módulo para manipulación del sistema de archivos.
+ * @requires path Módulo para manejo de rutas de archivos.
+ * @requires url Utilidad para manejo de URLs.
+ * @requires express-validator Validaciones de datos en las rutas.
+ * @requires ./validators.js Reglas de validación personalizadas para usuarios.
+ * @requires ./middlewares/logger.js Middleware para logging de peticiones.
+ * @requires ./middlewares/errorHandler.js Middleware para manejo centralizado de errores.
+ * 
+ * @constant {string} usersFilePath Ruta absoluta al archivo local de usuarios (users.json).
+ * @constant {number} PORT Puerto en el que corre el servidor.
+ * 
+ * @middleware
+ * @function express.json Middleware para parsear JSON en las peticiones.
+ * @function express.urlencoded Middleware para parsear datos de formularios HTML.
+ * @function LoggerMiddleware Middleware personalizado para registrar logs de las peticiones.
+ * @function errorHandler Middleware personalizado para manejo de errores globales.
+ * 
+ * @route GET /users
+ * @description Obtiene la lista de usuarios almacenados en el archivo local.
+ * 
+ * @route POST /users
+ * @description Crea un nuevo usuario en el archivo local. Valida los datos recibidos.
+ * 
+ * @route PUT /users/:id
+ * @description Actualiza un usuario existente en el archivo local por ID. Valida los datos recibidos.
+ * 
+ * @route DELETE /users/delete/:id
+ * @description Elimina un usuario del archivo local por ID.
+ * 
+ * @route GET /error
+ * @description Ruta de prueba para lanzar un error intencional y probar el middleware de errores.
+ * 
+ * @route GET /db-users
+ * @description Obtiene la lista de usuarios almacenados en la base de datos mediante Prisma.
+ * 
+ * @listen
+ * @description Inicia el servidor en el puerto especificado y muestra la URL en consola.
+ */
 import dotenv from 'dotenv';//nos permite conectar con nuestro archivo .env donde estan 
 // las variables de entorno
 dotenv.config();
@@ -12,6 +62,7 @@ import { validationResult } from 'express-validator';
 
 import {LoggerMiddleware} from './middlewares/logger.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { authenticateToken } from './middlewares/aut.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,7 +98,7 @@ app.post('/users', UserValidationRules, (req,res) => {
   }
 
   const newUser = req.body;
-  //console.log(newUser);
+  // Se eliminó el console.log(newUser) porque no aporta funcionalidad relevante.
   if(!newUser || !newUser.id) {
     return res.status(400).json({error: `No se esta enviando ningun usuario`,
       image:"https://http.cat/400"
@@ -140,7 +191,7 @@ app.get('/error', (req,res, next) => {
 });
 
 app.get('/db-users', async(req,res) => {
-  try{
+  try{  
     const users = await prisma.user.findMany();
     res.json(users);
   }catch(error){
@@ -148,6 +199,25 @@ app.get('/db-users', async(req,res) => {
   }
 });
 
+app.get('/protected-route', authenticateToken, (req,res) => {
+  res.send('Esta es una ruta protegida');
+});
+
+app.post('/register', async(req,res) => {
+const {email, password, name} = req.body;
+const hashedPassword = await bcrypt.hash(password,10);
+
+const newUser = await prisma.user.create({
+  data: {
+    email,
+    password: hashedPassword,
+    name,
+    role: 'USER'
+  }
+});
+res.status(201).json({message:'user register success'});
+});
+  
 
 app.listen(PORT, () => {
   console.log(`Corriendo por el puerto  http://localhost:${PORT}`);
