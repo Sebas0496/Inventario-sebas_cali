@@ -17,12 +17,12 @@ import jwt from 'jsonwebtoken';
 export const authenticateToken = (req, res, next) => {  
   const token = req.header('Authorization')?.split(" ")[1];
   /* encadenamiento opcional "?" verifica que lo que este antes de este signo no sea null ni undefined
-  si el header existe  hace el split que es una fucnion que crea un arreglo en este caso cuando encuentra un espacio 
+  si el header existe  hace el split que es una función que crea un arreglo en este caso cuando encuentra un espacio 
   por que es lo que le estamos indicando y luego nos unbica en la pocición 1 de ese arreglo
   */   
   if (!token) {
     
-    return res.status(401).json({ error: "Acceso denegado, token invalido" });
+    return res.status(401).json({ error: "Acceso denegado, token invalido" }); 
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
