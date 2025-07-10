@@ -12,9 +12,9 @@
  * @param {import('express').NextFunction} next - Función para pasar el control al siguiente middleware.
  * @returns {void}
  */
-import jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken'; 
 
-export const authenticateToken = (req, res, next) => {  
+export const authenticateToken = (req, res, next) => {   
   const token = req.header('Authorization')?.split(" ")[1];
   /* encadenamiento opcional "?" verifica que lo que este antes de este signo no sea null ni undefined
   si el header existe  hace el split que es una función que crea un arreglo en este caso cuando encuentra un espacio 

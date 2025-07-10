@@ -24,7 +24,7 @@
 
 /* =========================
    IMPORTACIÓN DE MÓDULOS
-   ========================= */
+   ========================= */ 
 import dotenv from 'dotenv'; // Carga variables de entorno
 dotenv.config();
 
@@ -36,15 +36,15 @@ import fs from 'fs'; // Trabajar con archivos locales (users.json)
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { UserValidationRules, UserValidationEditRules } from './validators.js'; // Reglas de validación
+import { UserValidationRules, UserValidationEditRules } from './src/utils/validators.js'; // Reglas de validación
 import { validationResult } from 'express-validator';
 
 import bcrypt from 'bcryptjs'; // Para hashear y comparar contraseñas
 import jwt from 'jsonwebtoken'; // Para autenticación JWT
 
-import { LoggerMiddleware } from './middlewares/logger.js'; // Middleware de logs
-import { errorHandler } from './middlewares/errorHandler.js'; // Middleware de errores
-import { authenticateToken } from './middlewares/aut.js'; // Middleware de autenticación JWT
+import { LoggerMiddleware } from './src/middlewares/logger.js'; // Middleware de logs
+import { errorHandler } from './src/middlewares/errorHandler.js'; // Middleware de errores
+import { authenticateToken } from './src/middlewares/aut.js'; // Middleware de autenticación JWT
 
 /* =========================
    DICCIONARIO DE VARIABLES Y FUNCIONES
@@ -93,6 +93,24 @@ const PORT = process.env.PORT || 3005;
 /* =========================
    ENDPOINTS CRUD SOBRE ARCHIVO JSON
    ========================= */
+
+/** 
+ * @route GET /
+ * @description da una bienvenida a el usuario al ingresar a la aplicación
+*/
+app.get('/', (req, res) => {
+  res.send(`
+        <html> 
+          <head>
+        <title>Mi API</title>
+      </head>
+      <body>
+        <h1>Bienvenidos!!</h1>
+        <p>API de creación de usuarios</P>
+      </body>
+        </html>
+      `);
+});
 
 /**
  * @route GET /users
@@ -268,9 +286,9 @@ app.post('/register', async (req, res) => {
  * - Compara la contraseña enviada con el hash almacenado en la base de datos.
  * - Devuelve true si coinciden, false si no.
  */
-app.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => {  
   const { email, password } = req.body;
-  // Busca el usuario por email (findUnique requiere que el campo sea único en el modelo)
+  // Busca el usuario por email (findUnique requiere que el campo tenga una propiedad anica en el modelo)
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(400).json({ error: 'Correo invalido o contraseña' });
 
@@ -281,9 +299,9 @@ app.post('/login', async (req, res) => {
   const token = jwt.sign({
     id: user.id,
     role: user.role
-  }, process.env.JWT_SECRET, {expiresIn: '4h'});
+  }, process.env.JWT_SECRET, { expiresIn: '4h' });
 
-  res.json({token});
+  res.json({ token });
 });
 
 /* =========================
@@ -307,7 +325,7 @@ app.get('/error', (req, res, next) => {
  */
 app.get('/protected-route', authenticateToken, (req, res) => {
   res.send('Esta es una ruta protegida bienvenido!!');
-  
+
 });
 
 /* =========================
@@ -355,3 +373,5 @@ app.listen(PORT, () => {
    - Validar todos los datos de entrada con express-validator.
    - Centralizar el manejo de errores con un middleware.
    - Proteger rutas sensibles con*/
+
+
